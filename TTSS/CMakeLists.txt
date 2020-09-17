@@ -1,6 +1,6 @@
 include_directories(include ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_library(ttss SHARED src/TTSSdataDownloader.cpp src/TTSSdataParser.cpp src/TTSSdirector.cpp ../../TramHoldup/src/Logger.cpp)
+add_library(ttss SHARED src/TTSSdataDownloader.cpp src/TTSSdataParser.cpp src/TTSSdirector.cpp ../../TramHoldupBasics/src/Logger.cpp)
 
 target_precompile_headers(ttss PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../TramHoldupBasics/include/rapidjson_pch.h)
 #target_precompile_headers(ttss PUBLIC ${CMAKE_SOURCE_DIR}/include/spdlog_pch.h)
