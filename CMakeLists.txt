@@ -1,52 +1,57 @@
 cmake_minimum_required(VERSION 3.16)
 
+project(PTTAT-DM-TTSS VERSION 0.5 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC" )
+
+# ----------------------------------------------
+# Data structure
+
+add_subdirectory(modules/PTTAT-structure)
 
 # Include structure
 if(DEFINED PTTAT_S_exist)
     include_directories(${PTTAT_S_PATH}/include)
     include_directories(${PTTAT_S_PATH}/libraries)
-    include_directories(${PTTAT_S_PATH}/DataManager/includePublic)
 
 else()
+    include(ExternalProject)
     ExternalProject_Add(PTTAT_Structure
             GIT_REPOSITORY https://github.com/FilipCysEk/PTTAT-structure.git
             CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/modules
             )
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules/PTTAT-structure/include)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules/PTTAT-structure/libraries)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules/PTTAT-structure/DataManager/includePublic)
+    include_directories(modules/PTTAT-structure/include)
+    include_directories(modules/PTTAT-structure/libraries)
 
     set(PTTAT_S_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules/PTTAT-structure)
 
 endif()
 
-# adding slibraries
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries)
+# ----------------------------------------------
+# Libraries
+
+include_directories(libraries)
 
 add_subdirectory(libraries)
 
 include_directories(include)
 
 # ----------------------------------------------
-# Start app
+# Start library
 
-project(TTSS)
+add_library(PTTAT-DM-TTSS SHARED
+        src/TTSSdataDownloader.cpp
+        src/TTSSdataParser.cpp
+        src/TTSSdirector.cpp
+        ${PTTAT_S_PATH}/src/Logger.cpp)
 
-set(CMAKE_CXX_STANDARD 17)
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC" )
+target_precompile_headers(PTTAT-DM-TTSS PUBLIC ${PTTAT_S_PATH}/include/rapidjson_pch.h)
 
-add_library(ttss SHARED src/TTSSdataDownloader.cpp src/TTSSdataParser.cpp src/TTSSdirector.cpp ${PTTAT_S_PATH}/src/Logger.cpp)
+target_link_libraries(PTTAT-DM-TTSS PUBLIC fileLib)
+target_link_libraries(PTTAT-DM-TTSS PUBLIC configLib)
+target_link_libraries(PTTAT-DM-TTSS PUBLIC downloaderLib)
+target_link_libraries(PTTAT-DM-TTSS PUBLIC PTTAT_structure)
+target_link_libraries(PTTAT-DM-TTSS PUBLIC spdlog::spdlog)
 
-target_precompile_headers(ttss PUBLIC ${PTTAT_S_PATH}/include/rapidjson_pch.h)
-#target_precompile_headers(ttss PUBLIC ${CMAKE_SOURCE_DIR}/include/spdlog_pch.h)
-target_precompile_headers(ttss PUBLIC ${PTTAT_S_PATH}/libraries/configLib/ConfigFile.h)
-target_precompile_headers(ttss PUBLIC ${PTTAT_S_PATH}/libraries/fileLib/FileLib.h)
-target_precompile_headers(ttss PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libraries/downloaderLib/Downloader.h)
-
-target_link_libraries(ttss PRIVATE DataManager)
-target_link_libraries(ttss PUBLIC fileLib)
-target_link_libraries(ttss PUBLIC configLib)
-target_link_libraries(ttss PUBLIC downloaderLib)
-target_link_libraries(ttss PRIVATE spdlog::spdlog)
-
-set_target_properties(ttss PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set_target_properties(PTTAT-DM-TTSS PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
